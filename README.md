@@ -7,6 +7,58 @@
 
 ---
 
+## 安装
+
+技能装在 WorkBuddy 的**用户级 skill 目录**：`%USERPROFILE%\.workbuddy-ai\skills\pc-cleanup`
+
+### 方式一：一行安装（推荐）
+
+打开 PowerShell，粘这一行：
+
+```powershell
+irm https://raw.githubusercontent.com/benben314/pc-cleanup/main/install.ps1 | iex
+```
+
+它会自动下载仓库、复制到 skill 目录、清掉 `__pycache__`、校验 `SKILL.md` 是否完整。
+
+### 方式二：clone 后本地安装
+
+```powershell
+git clone https://github.com/benben314/pc-cleanup.git
+cd pc-cleanup
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+想装到别处：
+
+```powershell
+.\install.ps1 -Dest "D:\skills\pc-cleanup"
+```
+
+目标已存在时会问你要不要覆盖，覆盖前自动备份成 `pc-cleanup.bak-<时间戳>`。加 `-Force` 跳过询问。
+
+### 方式三：手动
+
+把 `SKILL.md`、`references/`、`scripts/` 三样复制到 `%USERPROFILE%\.workbuddy-ai\skills\pc-cleanup\` 就行。**不要复制 `__pycache__`。**
+
+### 装完怎么验证
+
+```powershell
+Get-ChildItem "$env:USERPROFILE\.workbuddy-ai\skills\pc-cleanup" -Recurse -File
+```
+
+应该看到 `SKILL.md` 和 `scripts\{scan,clean,recycle_list}.py`。然后**重启 WorkBuddy**（或新开一个对话），跟它说「清理电脑」，看它会不会调 `scan.py`。
+
+### 卸载
+
+```powershell
+Remove-Item "$env:USERPROFILE\.workbuddy-ai\skills\pc-cleanup" -Recurse -Force
+```
+
+> macOS / Linux / WSL 也能用 `install.sh`，但这个技能的核心依赖 Windows（`winreg`、NTFS、PowerShell 回收站），非 Windows 上只保证文件就位，脚本不保证能跑。
+
+---
+
 ## 为什么做这个
 
 现成的清理工具大多在赌运气：扫出一堆「垃圾」，你不知道哪些删了会出事。这个技能反过来——
@@ -127,12 +179,15 @@ NTFS 的 last access time 默认不更新（`fsutil behavior query disablelastac
 ```
 pc-cleanup/
 ├── SKILL.md              # 技能主文件（Agent 读取的入口）
+├── install.ps1           # Windows 安装脚本
+├── install.sh            # macOS / Linux / WSL 安装脚本
 ├── references/
 │   └── rules.md          # 详细判定规则与路径清单
 ├── scripts/
 │   ├── scan.py           # 扫描器，输出 JSON 报告
 │   ├── clean.py          # 执行器，默认 dry-run
 │   └── recycle_list.py   # 按删除时间区分回收站条目来源
+├── LICENSE               # MIT
 └── README.md
 ```
 
